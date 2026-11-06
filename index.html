@@ -18,8 +18,9 @@
   @keyframes bob{0%,100%{translate:0 0}50%{translate:0 -8px}}
   .sub{color:var(--cyan);letter-spacing:.5em;font-weight:700;font-size:clamp(11px,1.6vw,15px);margin:6px 0 42px;text-align:center;opacity:0;animation:fade .6s .9s forwards;padding-left:.5em}
   @keyframes fade{to{opacity:1}}
-  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,330px));gap:26px;perspective:1100px;width:100%;justify-content:center}
-  @media (max-width:980px){.cards{grid-template-columns:minmax(0,420px)}}
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,290px));gap:24px;perspective:1100px;width:100%;justify-content:center}
+  @media (max-width:1280px){.cards{grid-template-columns:repeat(2,minmax(0,360px))}}
+  @media (max-width:720px){.cards{grid-template-columns:minmax(0,420px)}}
   .card{position:relative;border-radius:20px;padding:2px;cursor:pointer;outline:none;transform-style:preserve-3d;
     transition:transform .25s ease, filter .3s ease, opacity .3s;opacity:0;animation:rise .7s cubic-bezier(.2,1.3,.4,1) forwards;animation-delay:calc(1s + var(--i)*.14s)}
   @keyframes rise{from{opacity:0;transform:translateY(80px) rotateX(30deg)}to{opacity:1;transform:none}}
@@ -70,6 +71,8 @@ const GAMES = [
     desc: '공을 튕겨 네온 벽돌을 부숴라. 연쇄 폭발 벽돌, 멀티볼, 레이저, 파이어볼까지!' },
   { id: 'run', href: 'runner.html', name: 'NEON DASH', tag: 'RUNNER', c1: '#ffd23f', c2: '#ff3df0', key: 'neondash_hi',
     desc: '네온 도시를 질주하라! 점프·2단 점프·슬라이드로 장애물을 피하고 드론을 밟아라.' },
+  { id: 'stk', href: 'stack.html', name: 'NEON STACK', tag: 'PUZZLE', c1: '#3bff9d', c2: '#2bd9ff', key: 'neonstack_hi',
+    desc: '떨어지는 블록을 쌓아 줄을 지워라. 4줄 동시 클리어, 콤보, 그리고 게이지를 모아 NOVA 블래스트!' },
 ];
 const TAU = Math.PI * 2, rand = (a, b) => a + Math.random() * (b - a);
 
@@ -128,7 +131,7 @@ addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); select((sel + 1 + GAMES.length) % GAMES.length); previews[sel].el.focus({ preventScroll: false }); }
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); select((sel - 1 + GAMES.length) % GAMES.length); previews[sel].el.focus(); }
   else if ((e.key === 'Enter' || e.key === ' ') && sel >= 0) { e.preventDefault(); launch(sel); }
-  else if (e.key === '1' || e.key === '2' || e.key === '3') launch(+e.key - 1);
+  else if (+e.key >= 1 && +e.key <= GAMES.length) launch(+e.key - 1);
 });
 addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
 
@@ -335,7 +338,62 @@ function drawRunnerPreview(p, dt) {
   c.strokeStyle = '#ff3df0'; c.lineWidth = 4; c.beginPath(); c.moveTo(2, -54); for (let i = 1; i < 7; i++) c.lineTo(2 - i * 6, -54 + Math.sin(T * 16 - i) * 2 * i / 6); c.stroke();
   c.restore();
 }
-const DRAW = { sky: drawSkyPreview, brk: drawBreakerPreview, run: drawRunnerPreview };
+function drawStackPreview(p, dt) {
+  const c = p.ctx, w = p.w, h = p.h;
+  const COLS = 8, ROWS = 12, cs = Math.floor(Math.min((h - 12) / ROWS, (w * .5) / COLS));
+  const bx = Math.round(w / 2 - COLS * cs / 2), by = Math.round(h - ROWS * cs - 6), gap = 6;
+  const CL = ['#ff3df0', '#ffd23f', '#2bd9ff', '#3bff9d', '#ff3b5c', '#8f7bff', '#ff9b2b'];
+  const fill = st => { st.grid = Array.from({ length: ROWS }, (_, r) => Array.from({ length: COLS }, (_, k) => r >= ROWS - 4 && k !== gap ? CL[(r + k) % 7] : r >= ROWS - 6 && Math.random() < .4 && k !== gap ? CL[(r * 3 + k) % 7] : null)); };
+  if (!p.st || p.st.cs !== cs) { p.st = { cs, parts: [], rings: [], y: -4, flashT: 0, rise: 0 }; fill(p.st); }
+  const st = p.st;
+  c.fillStyle = '#07031a'; c.fillRect(0, 0, w, h);
+  c.fillStyle = 'rgba(10,4,30,.9)'; c.fillRect(bx, by, COLS * cs, ROWS * cs);
+  c.strokeStyle = 'rgba(255,255,255,.05)';
+  for (let k = 1; k < COLS; k++) { c.beginPath(); c.moveTo(bx + k * cs + .5, by); c.lineTo(bx + k * cs + .5, by + ROWS * cs); c.stroke(); }
+  const cell = (x, y, col, a = 1) => {
+    c.globalAlpha = a; c.fillStyle = col; c.fillRect(x + 1, y + 1, cs - 2, cs - 2);
+    c.fillStyle = 'rgba(255,255,255,.45)'; c.fillRect(x + 2, y + 1.5, cs - 4, 2);
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x + cs * .3, y + cs * .3, cs * .4, cs * .4); c.globalAlpha = 1;
+  };
+  // 낙하하는 세로 I 블록
+  if (st.flashT <= 0 && st.rise <= 0) {
+    st.y += dt * 9;
+    const land = ROWS - 4;
+    if (st.y >= land) {
+      st.y = land; st.flashT = .5;
+      for (let i = 0; i < 4; i++) st.grid[ROWS - 4 + i][gap] = '#ff3df0';
+      for (let r = ROWS - 4; r < ROWS; r++) for (let k = 0; k < COLS; k++) for (let j = 0; j < 2; j++)
+        st.parts.push({ x: bx + (k + .5) * cs, y: by + (r + .5) * cs, vx: (k < COLS / 2 ? -1 : 1) * rand(60, 220), vy: rand(-120, 40), life: rand(.3, .6), col: st.grid[r][k] || '#ffffff' });
+      st.rings.push({ x: bx + COLS * cs / 2, y: by + (ROWS - 2) * cs, t: 0, col: '#ff3df0' });
+    }
+  }
+  for (let r = 0; r < ROWS; r++) for (let k = 0; k < COLS; k++) {
+    const col = st.grid[r][k]; if (!col) continue;
+    const clearing = st.flashT > 0 && r >= ROWS - 4;
+    cell(bx + k * cs, by + (r + st.rise) * cs, col, clearing ? Math.min(1, st.flashT * 2) : 1);
+  }
+  if (st.flashT > 0) {
+    c.globalCompositeOperation = 'lighter';
+    c.fillStyle = `rgba(255,255,255,${st.flashT * .9})`; c.fillRect(bx, by + (ROWS - 4) * cs, COLS * cs, 4 * cs);
+    c.globalCompositeOperation = 'source-over';
+    c.font = `900 italic ${Math.round(cs * 1.8)}px "Segoe UI",sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.globalAlpha = Math.min(1, st.flashT * 3); c.fillStyle = '#ff3df0'; c.fillText('QUAD!', bx + COLS * cs / 2 + 2, by + ROWS * cs * .4); c.fillStyle = '#fff'; c.fillText('QUAD!', bx + COLS * cs / 2, by + ROWS * cs * .4); c.globalAlpha = 1;
+    st.flashT -= dt;
+    if (st.flashT <= 0) { // 다시 채우고 아래에서 솟아오르기
+      fill(st); st.rise = 4; st.y = -4;
+    }
+  } else if (st.rise > 0) st.rise = Math.max(0, st.rise - dt * 10);
+  else for (let i = 0; i < 4; i++) { const y = Math.floor(st.y) + i; if (y >= 0) cell(bx + gap * cs, by + (st.y + i) * cs, '#ff3df0'); }
+  stepParts(c, st, dt);
+  c.globalCompositeOperation = 'lighter';
+  c.strokeStyle = 'rgba(59,255,157,.6)'; c.lineWidth = 2; c.strokeRect(bx - 1, by - 1, COLS * cs + 2, ROWS * cs + 2);
+  c.globalCompositeOperation = 'source-over';
+  // 옆 NEXT 미니
+  const nx = bx + COLS * cs + 12;
+  if (nx + cs * 3 < w) { cell(nx, by + cs, '#ffd23f', .7); cell(nx + cs, by + cs, '#ffd23f', .7); cell(nx, by + cs * 2, '#ffd23f', .7); cell(nx + cs, by + cs * 2, '#ffd23f', .7);
+    cell(nx, by + cs * 4, '#2bd9ff', .5); cell(nx + cs, by + cs * 4, '#2bd9ff', .5); cell(nx + cs * 2, by + cs * 4, '#2bd9ff', .5); cell(nx + cs, by + cs * 3, '#2bd9ff', .5); }
+}
+const DRAW = { sky: drawSkyPreview, brk: drawBreakerPreview, run: drawRunnerPreview, stk: drawStackPreview };
 
 let last = performance.now();
 function frame(now) {
