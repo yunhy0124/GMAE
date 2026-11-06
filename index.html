@@ -271,8 +271,13 @@ function closeGame() {
   const k = GAMES.indexOf(was); if (k >= 0) { select(k); previews[k].el.focus({ preventScroll: true }); }
 }
 // 게임 → 런처 메시지. 오버레이 iframe 에서 온 것만 받음
+// 게임 iframe 또는 그 안쪽 화면에서 온 메시지인지 확인
+function fromGameFrame(src) {
+  try { let w = src; for (let i = 0; i < 5 && w; i++) { if (w === gameFrame.contentWindow) return true; if (w.parent === w) break; w = w.parent; } } catch (e) { }
+  return false;
+}
 addEventListener('message', e => {
-  if (!e.source || e.source !== gameFrame.contentWindow) return;
+  if (!fromGameFrame(e.source)) return;
   onGameMessage(e.data);
 });
 const SCORE_IDS = new Set(['sky', 'brk', 'run', 'stk']);

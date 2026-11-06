@@ -15,8 +15,10 @@
 <script>
 'use strict';
 const GAME_ID = 'stk';
-function postScore(sc) { try { if (window.parent !== window) window.parent.postMessage({ type: 'score', game: GAME_ID, score: Math.floor(sc) }, '*'); } catch (e) { } }
-function goMenu() { try { if (window.parent !== window) { window.parent.postMessage({ type: 'menu' }, '*'); return; } } catch (e) { } location.href = 'index.html'; }
+// 바깥쪽 모든 화면(런처)에 메시지 전달. 게시된 페이지는 한 겹 더 감싸일 수 있음
+function postUp(msg) { let sent = false; try { let w = window; for (let i = 0; i < 5 && w.parent && w.parent !== w; i++) { w = w.parent; try { w.postMessage(msg, '*'); sent = true; } catch (e) { } } } catch (e) { } return sent; }
+function postScore(sc) { postUp({ type: 'score', game: GAME_ID, score: Math.floor(sc) }); }
+function goMenu() { if (!postUp({ type: 'menu' })) location.href = 'index.html'; }
 // =====================================================================
 //  PRO STACK — 귀여운 낙하 블록 퍼즐 (카툰 스타일)
 // =====================================================================
