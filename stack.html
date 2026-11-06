@@ -13,6 +13,9 @@
 <canvas id="c"></canvas>
 <script>
 'use strict';
+const GAME_ID = 'stk';
+function postScore(sc) { try { if (window.parent !== window) window.parent.postMessage({ type: 'score', game: GAME_ID, score: Math.floor(sc) }, '*'); } catch (e) { } }
+function goMenu() { try { if (window.parent !== window) { window.parent.postMessage({ type: 'menu' }, '*'); return; } } catch (e) { } location.href = 'index.html'; }
 // =====================================================================
 //  NEON STACK — 네온 낙하 블록 퍼즐
 // =====================================================================
@@ -75,19 +78,29 @@ function cellSprite(color, s) {
   const pad = Math.round(s * .5), c = document.createElement('canvas');
   c.width = c.height = s + pad * 2;
   const g = c.getContext('2d'), [r, gg, b] = rgb(color);
+  const lt = k => `rgb(${Math.round(r + (255 - r) * k)},${Math.round(gg + (255 - gg) * k)},${Math.round(b + (255 - b) * k)})`;
+  const dk = k => `rgb(${Math.round(r * (1 - k))},${Math.round(gg * (1 - k))},${Math.round(b * (1 - k))})`;
+  // 외곽 글로우
   const gr = g.createRadialGradient(pad + s / 2, pad + s / 2, s * .2, pad + s / 2, pad + s / 2, s / 2 + pad);
-  gr.addColorStop(0, `rgba(${r},${gg},${b},.45)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+  gr.addColorStop(0, `rgba(${r},${gg},${b},.5)`); gr.addColorStop(1, `rgba(${r},${gg},${b},0)`);
   g.fillStyle = gr; g.fillRect(0, 0, c.width, c.height);
-  const x = pad + 1, y = pad + 1, w = s - 2, rad = Math.max(2, s * .16);
-  const body = g.createLinearGradient(0, y, 0, y + w);
-  body.addColorStop(0, `rgb(${Math.min(255, r + 70)},${Math.min(255, gg + 70)},${Math.min(255, b + 70)})`);
-  body.addColorStop(.45, color);
-  body.addColorStop(1, `rgb(${r * .45 | 0},${gg * .45 | 0},${b * .45 | 0})`);
-  g.fillStyle = body; g.beginPath(); g.roundRect(x, y, w, w, rad); g.fill();
-  g.fillStyle = 'rgba(10,0,25,.35)'; g.beginPath(); g.roundRect(x + w * .2, y + w * .2, w * .6, w * .6, rad * .6); g.fill();
-  g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(x + rad, y + 1.5, w - rad * 2, Math.max(1.5, s * .08));
-  g.strokeStyle = `rgba(${Math.min(255, r + 120)},${Math.min(255, gg + 120)},${Math.min(255, b + 120)},.9)`; g.lineWidth = 1;
-  g.beginPath(); g.roundRect(x + .5, y + .5, w - 1, w - 1, rad); g.stroke();
+  const x = pad + .5, y = pad + .5, w = s - 1, bv = Math.max(2, s * .2);
+  // 보석 베벨: 4개의 면
+  g.fillStyle = lt(.55); g.beginPath(); g.moveTo(x, y); g.lineTo(x + w, y); g.lineTo(x + w - bv, y + bv); g.lineTo(x + bv, y + bv); g.closePath(); g.fill();
+  g.fillStyle = lt(.25); g.beginPath(); g.moveTo(x, y); g.lineTo(x + bv, y + bv); g.lineTo(x + bv, y + w - bv); g.lineTo(x, y + w); g.closePath(); g.fill();
+  g.fillStyle = dk(.45); g.beginPath(); g.moveTo(x, y + w); g.lineTo(x + bv, y + w - bv); g.lineTo(x + w - bv, y + w - bv); g.lineTo(x + w, y + w); g.closePath(); g.fill();
+  g.fillStyle = dk(.25); g.beginPath(); g.moveTo(x + w, y); g.lineTo(x + w, y + w); g.lineTo(x + w - bv, y + w - bv); g.lineTo(x + w - bv, y + bv); g.closePath(); g.fill();
+  // 윗면 (내부 발광)
+  const fg = g.createRadialGradient(x + w * .4, y + w * .35, 1, x + w / 2, y + w / 2, w * .55);
+  fg.addColorStop(0, lt(.6)); fg.addColorStop(.45, color); fg.addColorStop(1, dk(.25));
+  g.fillStyle = fg; g.fillRect(x + bv, y + bv, w - bv * 2, w - bv * 2);
+  // 광택 반사
+  g.globalAlpha = .45; g.fillStyle = '#ffffff';
+  g.beginPath(); g.moveTo(x + bv, y + bv); g.lineTo(x + w * .62, y + bv); g.lineTo(x + bv, y + w * .62); g.closePath(); g.fill();
+  g.globalAlpha = .9; g.beginPath(); g.arc(x + bv + w * .12, y + bv + w * .12, Math.max(1, s * .06), 0, TAU); g.fill();
+  g.globalAlpha = 1;
+  g.strokeStyle = 'rgba(10,0,25,.55)'; g.lineWidth = 1; g.strokeRect(x, y, w, w);
+  g.strokeStyle = lt(.7); g.globalAlpha = .5; g.strokeRect(x + bv, y + bv, w - bv * 2, w - bv * 2); g.globalAlpha = 1;
   spriteCache[key] = { c, pad };
   return spriteCache[key];
 }
@@ -360,7 +373,7 @@ addEventListener('keydown', e => {
     if (first && (e.code === 'KeyC' || e.code === 'ShiftLeft' || e.code === 'ShiftRight')) hold();
     if (first && e.code === 'Space') hardDrop();
     if (first && e.code === 'KeyV') useNova();
-  } else if (e.code === 'Escape') location.href = 'index.html';
+  } else if (e.code === 'Escape') goMenu();
   else if (e.code === 'Space' || e.code === 'Enter') { if (state === 'title' || (state === 'over' && overT > 1.5)) startGame(); }
 });
 addEventListener('keyup', e => {
@@ -371,7 +384,7 @@ addEventListener('keyup', e => {
 let ptr = null;
 cv.addEventListener('pointerdown', e => {
   initAudio();
-  if (state !== 'play' && state !== 'dying' && inMenuBtn(e.clientX, e.clientY)) { location.href = 'index.html'; return; }
+  if (state !== 'play' && state !== 'dying' && inMenuBtn(e.clientX, e.clientY)) { goMenu(); return; }
   if (state === 'title') { startGame(); return; }
   if (state === 'over') { if (overT > 1.5) startGame(); return; }
   if (state !== 'play') return;
@@ -500,6 +513,7 @@ function update(rdt) {
     }
     if (dieSeq.t > 2.2) {
       state = 'over'; overT = 0;
+      postScore(score);
       if (score > hiscore) { hiscore = score; newRecord = true; try { localStorage.setItem('neonstack_hi', hiscore); } catch (e) { } }
     }
   }
@@ -544,19 +558,29 @@ function drawBG() {
   const g = ctx.createLinearGradient(0, 0, 0, H);
   g.addColorStop(0, hcol(h0, 60, 4)); g.addColorStop(1, hcol(h0 + 30, 70, 11 + bgPulse * 6));
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // 이퀄라이저
+  const n = eqBars.length, bw = W / n;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < n; i++) {
+    const target = (.12 + .1 * Math.sin(T * 2.2 + i * .7) + .08 * Math.sin(T * 5.3 + i * 1.9)) * (1 + bgPulse * 2.2);
+    eqBars[i] = lerp(eqBars[i], Math.max(.04, target), .12);
+    const h = eqBars[i] * H * .55, x = i * bw;
+    const bg = ctx.createLinearGradient(0, H - h, 0, H);
+    bg.addColorStop(0, hcol(h0 + 60 + i * 4, 100, 60, .0)); bg.addColorStop(.25, hcol(h0 + 60 + i * 4, 100, 60, .22)); bg.addColorStop(1, hcol(h0 + 20, 100, 55, .05));
+    ctx.fillStyle = bg;
+    for (let y = H - h; y < H; y += 9) ctx.fillRect(x + 2, y, bw - 4, 6);
+  }
   // 원근 바닥 그리드
   const hy = H * .62;
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
   ctx.strokeStyle = hcol(h0 + 60, 100, 60); ctx.lineWidth = 1;
-  for (let i = 0; i < 14; i++) { const z = (i + (T * (.5 + bgPulse)) % 1) / 14, y = hy + z * z * (H - hy); ctx.globalAlpha = z * (.3 + bgPulse * .3); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-  ctx.globalAlpha = .15 + bgPulse * .1;
+  for (let i = 0; i < 14; i++) { const z = (i + (T * (.5 + bgPulse)) % 1) / 14, y = hy + z * z * (H - hy); ctx.globalAlpha = z * (.22 + bgPulse * .3); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.globalAlpha = .12 + bgPulse * .1;
   for (let i = -16; i <= 16; i++) { ctx.beginPath(); ctx.moveTo(W / 2 + i * 16, hy); ctx.lineTo(W / 2 + i * W * .13, H); ctx.stroke(); }
   ctx.globalAlpha = 1; ctx.restore();
-  // 떠다니는 블록
   for (const b of bgPieces) {
-    const s = 14 + b.z * 22, n = b.m.length;
-    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.translate(-n * s / 2, -n * s / 2);
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (b.m[r][c]) drawCell(c * s, r * s, s, PIECES[b.k].c, .08 + b.z * .12 + bgPulse * .1);
+    const s = 14 + b.z * 22, n2 = b.m.length;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.rot); ctx.translate(-n2 * s / 2, -n2 * s / 2);
+    for (let r = 0; r < n2; r++) for (let c = 0; c < n2; c++) if (b.m[r][c]) drawCell(c * s, r * s, s, PIECES[b.k].c, .08 + b.z * .12 + bgPulse * .1);
     ctx.restore();
   }
 }
@@ -899,12 +923,29 @@ function drawMenuBtn() {
   ctx.fillStyle = '#ffffff'; ctx.font = '700 13px "Segoe UI",sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('◀ MENU (Esc)', W / 2, 27);
 }
+let eqBars = new Array(32).fill(0);
+function drawBoardGlass() {
+  if (state === 'title') return;
+  const { bx, by, bw, bh } = L;
+  ctx.save(); ctx.translate(0, bumpY);
+  ctx.beginPath(); ctx.rect(bx, by, bw, bh); ctx.clip();
+  // 대각 반사
+  const g = ctx.createLinearGradient(bx, by, bx + bw, by + bh * .6);
+  g.addColorStop(0, 'rgba(255,255,255,.07)'); g.addColorStop(.35, 'rgba(255,255,255,.02)'); g.addColorStop(.36, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g; ctx.fillRect(bx, by, bw, bh);
+  const sx = bx + ((T * .15) % 1.6 - .3) * bw * 2;
+  ctx.fillStyle = 'rgba(255,255,255,.04)'; ctx.beginPath(); ctx.moveTo(sx, by); ctx.lineTo(sx + 40, by); ctx.lineTo(sx - bh * .4 + 40, by + bh); ctx.lineTo(sx - bh * .4, by + bh); ctx.fill();
+  // 안쪽 그림자
+  const ig = ctx.createLinearGradient(0, by, 0, by + 30); ig.addColorStop(0, 'rgba(0,0,0,.45)'); ig.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = ig; ctx.fillRect(bx, by, bw, 30);
+  ctx.restore();
+}
 function draw() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.save();
   if (shake > .3) ctx.translate(rand(-1, 1) * shake, rand(-1, 1) * shake);
   drawBG();
-  if (state !== 'title') { drawBoard(); drawSide(); }
+  if (state !== 'title') { drawBoard(); drawBoardGlass(); drawSide(); }
   drawParticles();
   drawTexts();
   ctx.restore();

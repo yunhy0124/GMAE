@@ -10,7 +10,7 @@
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,sans-serif;overflow-x:hidden}
   #bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
   main{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 16px 56px}
-  h1{margin:0 0 6px;font-size:clamp(44px,9vw,110px);font-weight:900;font-style:italic;letter-spacing:.02em;line-height:1;text-align:center;white-space:nowrap}
+  h1{margin:0 0 6px;font-size:clamp(32px,10.5vw,110px);font-weight:900;font-style:italic;letter-spacing:.02em;line-height:1;text-align:center;white-space:nowrap}
   h1 span{display:inline-block;color:#fff;text-shadow:-4px 0 rgba(255,40,200,.85),4px 0 rgba(40,220,255,.85),0 0 30px rgba(255,61,240,.6);
     animation:drop .8s cubic-bezier(.2,1.6,.4,1) both, bob 2.4s ease-in-out infinite}
   h1 .sp{width:.35em}
@@ -18,9 +18,15 @@
   @keyframes bob{0%,100%{translate:0 0}50%{translate:0 -8px}}
   .sub{color:var(--cyan);letter-spacing:.5em;font-weight:700;font-size:clamp(11px,1.6vw,15px);margin:6px 0 42px;text-align:center;opacity:0;animation:fade .6s .9s forwards;padding-left:.5em}
   @keyframes fade{to{opacity:1}}
-  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,290px));gap:24px;perspective:1100px;width:100%;justify-content:center}
-  @media (max-width:1280px){.cards{grid-template-columns:repeat(2,minmax(0,360px))}}
-  @media (max-width:720px){.cards{grid-template-columns:minmax(0,420px)}}
+  [hidden]{display:none!important}
+  /* 넓은 화면 4개 한 줄 → 중간 2×2 → 폰 1열 */
+  .cards{display:grid;grid-template-columns:repeat(4,minmax(0,290px));gap:22px;perspective:1100px;width:100%;justify-content:center}
+  @media (max-width:1180px){
+    .cards{grid-template-columns:repeat(2,minmax(0,360px))}
+  }
+  @media (max-width:720px){
+    .cards{grid-template-columns:minmax(0,420px)}
+  }
   .card{position:relative;border-radius:20px;padding:2px;cursor:pointer;outline:none;transform-style:preserve-3d;
     transition:transform .25s ease, filter .3s ease, opacity .3s;opacity:0;animation:rise .7s cubic-bezier(.2,1.3,.4,1) forwards;animation-delay:calc(1s + var(--i)*.14s)}
   @keyframes rise{from{opacity:0;transform:translateY(80px) rotateX(30deg)}to{opacity:1;transform:none}}
@@ -48,9 +54,79 @@
   .card.sel .shine{opacity:1}
   .hint{margin-top:34px;color:rgba(255,255,255,.55);font-size:13px;text-align:center;opacity:0;animation:fade .6s 1.8s forwards}
   .hint kbd{font:700 11px Consolas,monospace;border:1px solid rgba(255,255,255,.35);border-bottom-width:2px;border-radius:5px;padding:1px 6px;margin:0 2px;color:#fff}
-  #flash{position:fixed;inset:0;z-index:5;pointer-events:none;background:#fff;opacity:0}
+  #flash{position:fixed;inset:0;z-index:25;pointer-events:none;background:#fff;opacity:0}
+  .best.free{color:#ffc2ec}
+  /* ---------- 닉네임 바 ---------- */
+  .nickbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 10px;margin:-24px 0 30px;padding:8px 8px 8px 18px;border-radius:99px;max-width:100%;
+    background:rgba(24,10,52,.55);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:0 0 24px rgba(43,217,255,.12);opacity:0;animation:fade .6s 1s forwards}
+  .nb-label{font:800 11px Consolas,monospace;letter-spacing:.2em;color:var(--cyan)}
+  .nb-nick{font-weight:900;font-style:italic;font-size:17px;max-width:14ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 0 12px rgba(255,61,240,.7)}
+  .nb-nick.empty{color:var(--muted);font-style:normal;font-weight:600;font-size:14px;text-shadow:none}
+  .btn{font:800 12.5px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;padding:7px 13px;border-radius:99px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;cursor:pointer;transition:background .2s,transform .15s,box-shadow .2s}
+  .btn:hover,.btn:focus-visible{background:rgba(255,255,255,.14);outline:none;box-shadow:0 0 14px rgba(43,217,255,.4)}
+  .btn.hot{border:0;color:#0a0418;background:linear-gradient(90deg,var(--gold),var(--pink));box-shadow:0 0 16px rgba(255,61,240,.5)}
+  .nickform{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px}
+  .nickform input{width:min(200px,52vw);font:700 15px "Segoe UI",system-ui,sans-serif;color:#fff;padding:7px 14px;border-radius:99px;border:1px solid rgba(43,217,255,.6);
+    background:rgba(5,2,14,.7);outline:none;box-shadow:0 0 0 0 rgba(43,217,255,0);transition:box-shadow .2s}
+  .nickform input:focus{box-shadow:0 0 0 3px rgba(43,217,255,.25),0 0 18px rgba(43,217,255,.4)}
+  .nb-err{flex-basis:100%;text-align:center;font-size:12px;color:#ff8fb1;min-height:0}
+  .nb-err:empty{display:none}
+  .nickbar.ask{animation:fade .01s forwards,askpulse 1.2s ease-in-out 3}
+  @keyframes askpulse{50%{box-shadow:0 0 0 4px rgba(255,210,63,.35),0 0 30px rgba(255,61,240,.5)}}
+  .nb-msg{flex-basis:100%;text-align:center;font-size:12.5px;color:var(--gold)}
+  /* ---------- 랭킹 ---------- */
+  .rank{width:100%;max-width:640px;margin-top:40px;border-radius:22px;padding:18px 18px 14px;
+    background:linear-gradient(160deg,rgba(44,18,88,.55),rgba(10,4,24,.72));border:1px solid rgba(255,255,255,.13);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 40px rgba(255,61,240,.12),inset 0 1px 0 rgba(255,255,255,.08);
+    opacity:0;animation:fade .6s 1.9s forwards;scroll-margin-top:20px}
+  .rank header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .rank h3{margin:0;font-size:22px;font-weight:900;font-style:italic;letter-spacing:.04em;text-shadow:0 0 16px rgba(255,210,63,.6)}
+  .mode{font:800 10.5px Consolas,monospace;letter-spacing:.14em;padding:4px 10px;border-radius:99px;border:1px solid currentColor;color:var(--cyan);white-space:nowrap}
+  .mode.local{color:var(--gold)}
+  .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .tab{flex:1 1 auto;min-width:0;font:800 12px "Segoe UI",system-ui,sans-serif;letter-spacing:.06em;padding:8px 10px;border-radius:12px;cursor:pointer;
+    color:var(--muted);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);transition:color .2s,background .2s,box-shadow .2s}
+  .tab:hover{color:#fff}
+  .tab[aria-selected="true"]{color:#0a0418;background:linear-gradient(90deg,var(--c1),var(--c2));border-color:transparent;box-shadow:0 0 16px var(--c1)}
+  .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;min-height:120px}
+  .list li{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 12px;border-radius:12px;background:rgba(255,255,255,.035);
+    animation:rowin .35s ease both;animation-delay:calc(var(--k,0)*.025s)}
+  @keyframes rowin{from{opacity:0;transform:translateX(-10px)}}
+  .list .pos{font:900 15px Consolas,monospace;color:var(--muted);text-align:center}
+  .list .medal{font-size:20px;line-height:1}
+  .list .nm{font-weight:700;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .list .sc{font:800 15px Consolas,monospace;letter-spacing:.04em}
+  .list li.top1{background:linear-gradient(90deg,rgba(255,210,63,.18),rgba(255,255,255,.03))}
+  .list li.me{background:linear-gradient(90deg,rgba(43,217,255,.28),rgba(255,61,240,.16));box-shadow:inset 0 0 0 1px rgba(43,217,255,.7),0 0 16px rgba(43,217,255,.25)}
+  .list li.me .nm::after{content:" (나)";color:var(--cyan);font-size:12px}
+  .list li.flash{animation:rowin .35s ease both,mefl 1s ease 2}
+  @keyframes mefl{50%{box-shadow:inset 0 0 0 2px #fff,0 0 30px rgba(255,210,63,.7)}}
+  .list .empty{display:block;text-align:center;color:var(--muted);font-size:13.5px;padding:26px 8px;background:none}
+  .note{margin:10px 2px 0;font-size:12px;color:var(--muted);line-height:1.5}
+  .note:empty{display:none}
+  .note.warn{color:#ffb38f}
+  .spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.2);border-top-color:var(--cyan);vertical-align:-2px;margin-right:8px;animation:sp .8s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* ---------- 게임 오버레이 ---------- */
+  #game{position:fixed;inset:0;z-index:20;background:#000}
+  #game iframe{display:block;width:100%;height:100%;border:0}
+  /* ---------- 토스트 ---------- */
+  #toast{position:fixed;left:50%;top:22px;z-index:30;pointer-events:none;transform:translate(-50%,-30px) scale(.8);opacity:0;
+    padding:12px 22px;border-radius:16px;text-align:center;color:#0a0418;font-weight:900;font-style:italic;letter-spacing:.06em;max-width:calc(100vw - 32px);
+    background:linear-gradient(90deg,var(--gold),var(--pink));box-shadow:0 0 30px rgba(255,61,240,.7),0 0 0 2px rgba(255,255,255,.5)}
+  #toast.show{animation:toast 2.6s cubic-bezier(.2,1.4,.4,1) forwards}
+  #toast b{display:block;font-size:24px;line-height:1.1}
+  #toast span{font:800 13px Consolas,monospace;font-style:normal}
+  @keyframes toast{0%{opacity:0;transform:translate(-50%,-30px) scale(.8)}12%{opacity:1;transform:translate(-50%,0) scale(1.06)}20%,85%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-20px) scale(.95)}}
+  @media (max-width:520px){
+    .nickbar{border-radius:20px;padding:10px 12px}
+    .rank{padding:14px 12px 12px;border-radius:18px}
+    .tab{font-size:11px;padding:7px 6px;flex-basis:calc(50% - 3px)}
+    .list li{grid-template-columns:34px minmax(0,1fr) auto;gap:8px;padding:7px 9px}
+  }
   .card.launch{z-index:4;transition:transform .5s cubic-bezier(.6,-0.2,.7,1),opacity .5s;transform:scale(1.6) translateZ(100px)!important;opacity:0}
-  @media (prefers-reduced-motion:reduce){h1 span,.card,.sub,.hint{animation-duration:.01s!important;animation-delay:0s!important}}
+  @media (prefers-reduced-motion:reduce){h1 span,.card,.sub,.hint,.nickbar,.rank,.list li{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
 <body>
@@ -58,12 +134,38 @@
 <main>
   <h1 id="title"></h1>
   <div class="sub">CHOOSE YOUR GAME</div>
+  <div class="nickbar" id="nickbar">
+    <div class="nickform" id="nickView">
+      <span class="nb-label">PLAYER</span>
+      <span class="nb-nick empty" id="nickShow">닉네임 없음</span>
+      <button class="btn" id="nickEdit" type="button">✎ 닉네임</button>
+      <button class="btn hot" id="rankBtn" type="button">🏆 랭킹</button>
+    </div>
+    <form class="nickform" id="nickForm" hidden autocomplete="off">
+      <span class="nb-label">NICKNAME</span>
+      <input id="nickInput" maxlength="24" placeholder="닉네임 (2–12자)" aria-label="닉네임" spellcheck="false">
+      <button class="btn hot" type="submit">저장</button>
+      <button class="btn" type="button" id="nickCancel">취소</button>
+      <span class="nb-err" id="nickErr" role="alert"></span>
+    </form>
+  </div>
   <div class="cards" id="cards"></div>
-  <div class="hint"><kbd>←</kbd><kbd>→</kbd> 선택 · <kbd>Enter</kbd> 시작 · 게임 중 <kbd>Esc</kbd> 로 메뉴 복귀</div>
+  <div class="hint"><kbd>←</kbd><kbd>→</kbd> 선택 · <kbd>Enter</kbd> 시작 · <kbd>1</kbd>–<kbd>5</kbd> 바로 시작 · 게임 중 <kbd>Esc</kbd> 로 메뉴 복귀</div>
+  <section class="rank" id="rank" aria-labelledby="rankTitle">
+    <header><h3 id="rankTitle">🏆 랭킹</h3><span class="mode local" id="rankMode">로컬 기록</span></header>
+    <div class="tabs" id="rankTabs" role="tablist"></div>
+    <ol class="list" id="rankList"></ol>
+    <p class="note" id="rankNote"></p>
+  </section>
 </main>
+<div id="game" hidden><iframe id="gameFrame" name="arcade-game" title="게임" allow="autoplay; fullscreen"></iframe></div>
 <div id="flash"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <script>
 'use strict';
+// 게임이 예전 방식으로 index.html 로 되돌아와 오버레이 iframe 안에 런처가 뜬 경우: 부모에게 메뉴 복귀를 알리고 아무것도 그리지 않음
+const EMBEDDED = window.name === 'arcade-game' && window.parent !== window;
+if (EMBEDDED) { document.documentElement.style.visibility = 'hidden'; try { window.parent.postMessage({ type: 'menu' }, '*'); } catch (e) { } }
 const GAMES = [
   { id: 'sky', href: 'skyblaze.html', name: 'SKY BLAZE', tag: 'SHOOTER', c1: '#2bd9ff', c2: '#ff3d7f', key: 'skyblaze_hi',
     desc: '전투기를 몰고 적 편대와 초대형 전함을 격추하라. 파워업, 유도 미사일, 폭탄, 탄막 보스전!' },
@@ -74,6 +176,7 @@ const GAMES = [
   { id: 'stk', href: 'stack.html', name: 'NEON STACK', tag: 'PUZZLE', c1: '#3bff9d', c2: '#2bd9ff', key: 'neonstack_hi',
     desc: '떨어지는 블록을 쌓아 줄을 지워라. 4줄 동시 클리어, 콤보, 그리고 게이지를 모아 NOVA 블래스트!' },
 ];
+const RANKED = GAMES.filter(g => !g.unranked);
 const TAU = Math.PI * 2, rand = (a, b) => a + Math.random() * (b - a);
 
 // ---------- 타이틀 글자 ----------
@@ -91,13 +194,13 @@ const wrap = document.getElementById('cards');
 let sel = -1, launching = false;
 const previews = [];
 GAMES.forEach((g, i) => {
-  let best = 0; try { best = +localStorage.getItem(g.key) || 0; } catch (e) { }
   const el = document.createElement('div');
   el.className = 'card'; el.tabIndex = 0;
   el.style.setProperty('--i', i); el.style.setProperty('--c1', g.c1); el.style.setProperty('--c2', g.c2);
+  const bestHTML = g.unranked ? `<span class="best free">FREE PLAY ♡</span>` : `<span class="best">BEST <b>0</b></span>`;
   el.innerHTML = `<div class="in"><canvas></canvas><div class="info">
       <span class="tag">${g.tag}</span><h2>${g.name}</h2><p>${g.desc}</p>
-      <div class="row"><span class="best">BEST <b>${Math.floor(best).toLocaleString()}</b></span><button class="play" tabindex="-1">PLAY ▶</button></div>
+      <div class="row">${bestHTML}<button class="play" tabindex="-1">PLAY ▶</button></div>
     </div><div class="shine"></div></div>`;
   el.addEventListener('mouseenter', () => select(i));
   el.addEventListener('focus', () => select(i));
@@ -117,23 +220,334 @@ function select(i) {
   previews.forEach((p, k) => p.el.classList.toggle('sel', k === i));
   blip(500 + i * 120);
 }
+// ---------- 게임 오버레이 ----------
+const gameBox = document.getElementById('game'), gameFrame = document.getElementById('gameFrame'), flashEl = document.getElementById('flash');
+let gameOpen = null, launchTimer = 0; // gameOpen: 실행 중인 GAMES 항목
 function launch(i) {
-  if (launching) return; launching = true;
+  if (launching || gameOpen) return;
+  if (!getNick()) { askNick(i); return; }
+  launching = true;
   select(i);
   const p = previews[i];
   p.el.classList.add('launch');
-  const f = document.getElementById('flash');
-  f.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 1 }], { duration: 520, easing: 'ease-in', fill: 'forwards' });
+  flashEl.getAnimations().forEach(a => a.cancel());
+  flashEl.animate([{ opacity: 0 }, { opacity: .95 }, { opacity: 1 }], { duration: 520, easing: 'ease-in', fill: 'forwards' });
   warp = 6; whoosh();
-  setTimeout(() => { location.href = p.game.href; }, 520);
+  gameFrame.src = p.game.href; // 플래시 동안 미리 로드
+  launchTimer = setTimeout(() => {
+    gameOpen = p.game; lastGame = p.game.id;
+    gameBox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    try { gameFrame.focus(); gameFrame.contentWindow.focus(); } catch (e) { }
+    flashEl.getAnimations().forEach(a => a.cancel());
+    flashEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, easing: 'ease-out', fill: 'forwards' });
+  }, 520);
+}
+gameFrame.addEventListener('load', () => { if (gameOpen) try { gameFrame.contentWindow.focus(); } catch (e) { } });
+function closeGame() {
+  if (!gameOpen && !launching) return;
+  clearTimeout(launchTimer);
+  const was = gameOpen; gameOpen = null; launching = false;
+  gameBox.hidden = true;
+  gameFrame.src = 'about:blank'; // 게임 루프·오디오 정지
+  document.body.style.overflow = '';
+  previews.forEach(p => { p.el.classList.remove('launch'); p.el.style.transform = ''; });
+  flashEl.getAnimations().forEach(a => a.cancel());
+  flashEl.animate([{ opacity: .85 }, { opacity: 0 }], { duration: 420, easing: 'ease-out', fill: 'forwards' });
+  warp = 3; last = performance.now();
+  refreshCardBests();
+  if (was && !was.unranked) setTab(was.id);
+  const k = GAMES.indexOf(was); if (k >= 0) { select(k); previews[k].el.focus({ preventScroll: true }); }
+}
+// 게임 → 런처 메시지. 오버레이 iframe 에서 온 것만 받음
+addEventListener('message', e => {
+  if (!e.source || e.source !== gameFrame.contentWindow) return;
+  onGameMessage(e.data);
+});
+const SCORE_IDS = new Set(['sky', 'brk', 'run', 'stk']);
+function onGameMessage(d) {
+  if (!d || typeof d !== 'object' || typeof d.type !== 'string') return;
+  if (d.type === 'menu') closeGame();
+  else if (d.type === 'score') {
+    if (typeof d.game !== 'string' || !SCORE_IDS.has(d.game)) return;
+    const s = typeof d.score === 'number' ? d.score : NaN;
+    if (!Number.isFinite(s) || s <= 0) return;
+    recordScore(d.game, Math.min(1e10, Math.floor(s)));
+  }
 }
 addEventListener('keydown', e => {
+  if (gameOpen || launching) { if (e.key === 'Escape' && gameOpen) closeGame(); return; }
+  const t = e.target, tag = t && t.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return; // 닉네임 입력 중
+  if (tag === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return; // 버튼 기본 동작
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); select((sel + 1 + GAMES.length) % GAMES.length); previews[sel].el.focus({ preventScroll: false }); }
   else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); select((sel - 1 + GAMES.length) % GAMES.length); previews[sel].el.focus(); }
   else if ((e.key === 'Enter' || e.key === ' ') && sel >= 0) { e.preventDefault(); launch(sel); }
-  else if (+e.key >= 1 && +e.key <= GAMES.length) launch(+e.key - 1);
+  else if (/^[1-9]$/.test(e.key) && +e.key <= GAMES.length) { e.preventDefault(); launch(+e.key - 1); }
 });
 addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
+// ---------- 닉네임 ----------
+const NICK_KEY = 'arcade_nick', BOARD_KEY = 'arcade_board';
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } };
+// 제어문자·방향전환·폭 없는 문자 제거
+const BAD_CHARS = new RegExp('[' + [[0, 31], [127, 159], [0x200b, 0x200f], [0x2028, 0x202e], [0x2066, 0x2069], [0xfeff, 0xfeff]].map(([a, b]) => String.fromCharCode(a) + '-' + String.fromCharCode(b)).join('') + ']', 'g');
+function cleanNick(s) {
+  if (typeof s !== 'string') return '';
+  return s.replace(BAD_CHARS, '').replace(/\s+/g, ' ').trim();
+}
+const nickLen = s => [...s].length;
+const validNick = s => { const n = nickLen(s); return n >= 2 && n <= 12; };
+let nick = cleanNick(lsGet(NICK_KEY) || ''); if (!validNick(nick)) nick = '';
+function getNick() { return nick; }
+const nickbar = document.getElementById('nickbar'), nickView = document.getElementById('nickView'), nickForm = document.getElementById('nickForm'),
+  nickInput = document.getElementById('nickInput'), nickErr = document.getElementById('nickErr'), nickShow = document.getElementById('nickShow');
+let pendingLaunch = -1;
+function renderNick() { nickShow.textContent = nick || '닉네임 없음'; nickShow.classList.toggle('empty', !nick); }
+function nickMsg(text, isErr) { nickErr.textContent = text || ''; nickErr.className = isErr ? 'nb-err' : 'nb-err nb-msg'; }
+function openNickForm(msg) {
+  nickView.hidden = true; nickForm.hidden = false; nickInput.value = nick; nickMsg(msg, false);
+  nickInput.focus({ preventScroll: true }); nickInput.select();
+}
+function closeNickForm() { nickForm.hidden = true; nickView.hidden = false; nickMsg(''); }
+function askNick(i) {
+  pendingLaunch = i;
+  openNickForm('게임을 시작하려면 먼저 닉네임을 정해주세요!');
+  nickbar.classList.remove('ask'); void nickbar.offsetWidth; nickbar.classList.add('ask');
+  nickbar.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+document.getElementById('nickEdit').addEventListener('click', () => { pendingLaunch = -1; openNickForm(''); });
+document.getElementById('nickCancel').addEventListener('click', () => { pendingLaunch = -1; closeNickForm(); });
+nickInput.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); pendingLaunch = -1; closeNickForm(); } });
+nickForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const v = cleanNick(nickInput.value);
+  if (!validNick(v)) { nickMsg('닉네임은 2–12자로 입력해주세요.', true); nickInput.focus(); return; }
+  const changed = v !== nick;
+  nick = v; lsSet(NICK_KEY, v); renderNick(); closeNickForm(); blip(900);
+  if (changed) onNickChanged();
+  const i = pendingLaunch; pendingLaunch = -1;
+  if (i >= 0) launch(i);
+});
+
+// ---------- 저장소: 온라인(db) / 로컬(localStorage) ----------
+const store = {
+  mode: 'pending',   // 'pending' → 'online' | 'local'
+  state: 'loading',  // 'loading' | 'ready' | 'timeout' | 'error'
+  db: null, uid: null, canWrite: true, blocked: '', writeErr: '',
+  docs: [], mine: {}, haveRemote: false, pend: [],
+};
+const num = v => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? Math.floor(v) : 0);
+const clipNick = s => { const n = cleanNick(s); return n ? [...n].slice(0, 12).join('') : '익명'; };
+// 로컬
+function loadBoard() {
+  let a; try { a = JSON.parse(lsGet(BOARD_KEY) || '[]'); } catch (e) { a = []; }
+  if (!Array.isArray(a)) return [];
+  return a.filter(e => e && typeof e.nick === 'string' && SCORE_IDS.has(e.game) && num(e.score) > 0)
+    .map(e => ({ nick: clipNick(e.nick), game: e.game, score: num(e.score), at: num(e.at) }));
+}
+let board = [];
+function saveBoard() {
+  // 게임당 상위 200개만 보관
+  const keep = [];
+  for (const g of RANKED) keep.push(...board.filter(e => e.game === g.id).sort((a, b) => b.score - a.score || a.at - b.at).slice(0, 200));
+  board = keep; lsSet(BOARD_KEY, JSON.stringify(board));
+}
+// 온라인 문서 정리 (다른 사람이 쓴 값이므로 신뢰하지 않음)
+function sanitizeDoc(id, b) {
+  if (!b || typeof b !== 'object') return null;
+  const d = { id, nick: clipNick(b.nick), updatedAt: num(b.updatedAt) };
+  for (const g of RANKED) d[g.id] = num(b[g.id]);
+  return d;
+}
+function myBest(game) {
+  if (store.mode === 'local') { const e = nick && board.find(x => x.nick === nick && x.game === game); return e ? e.score : 0; }
+  return store.mine[game] || 0;
+}
+function allRows(game) {
+  let rows;
+  if (store.mode === 'local') rows = board.filter(e => e.game === game).map(e => ({ nick: e.nick, score: e.score, at: e.at, me: !!nick && e.nick === nick }));
+  else if (store.mode === 'online') rows = store.docs.map(d => ({ nick: d.nick, score: d[game], at: d.updatedAt, me: !!store.uid && d.id === store.uid })).filter(r => r.score > 0);
+  else rows = [];
+  return rows.sort((a, b) => b.score - a.score || a.at - b.at);
+}
+function recordScore(game, score) {
+  if (store.mode === 'pending') { store.pend.push([game, score]); return; }
+  const prev = myBest(game);
+  if (score <= prev) return;
+  if (store.mode === 'local') {
+    const e = board.find(x => x.nick === nick && x.game === game);
+    if (e) { e.score = score; e.at = Date.now(); } else board.push({ nick, game, score, at: Date.now() });
+    saveBoard();
+  } else {
+    store.mine[game] = score;
+    queueWrite();
+  }
+  showBest(game, score);
+  flashMe = game; setTab(game); refreshCardBests();
+}
+function onNickChanged() {
+  if (store.mode === 'online' && RANKED.some(g => store.mine[g.id] > 0)) queueWrite();
+  renderRank();
+}
+// 한 번에 하나씩, 기다려서 쓰기
+let writing = false, dirty = false;
+function queueWrite() { dirty = true; pump(); }
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function pump() {
+  if (writing || !dirty || store.mode !== 'online' || !store.canWrite || !store.uid) return;
+  writing = true; dirty = false;
+  try {
+    const ref = store.db.collection('scores').doc(store.uid);
+    if (!store.haveRemote) { // 아직 서버 기록을 모르면 덮어쓰기 전에 한 번 읽어서 합침
+      try { const s = await ref.get(); if (s.exists) mergeMine(sanitizeDoc(s.id, s.data())); store.haveRemote = true; } catch (e) { }
+    }
+    const body = { nick: nick || '익명', updatedAt: Date.now() };
+    for (const g of RANKED) body[g.id] = store.mine[g.id] || 0;
+    try { await ref.set(body); }
+    catch (e) { if (e && e.code === 'unavailable') { await sleep(600 + Math.random() * 1200); await ref.set(body); } else throw e; }
+    store.writeErr = '';
+  } catch (e) {
+    const code = e && e.code;
+    if (!code || code === 'invalid_argument' || code === 'not_granted' || code === 'revoked' || code === 'capability_disabled' || code === 'capability_removed' || code === 'transform_error') {
+      store.canWrite = false; store.blocked = 'denied'; dirty = false;
+    } else store.writeErr = code;
+  } finally {
+    writing = false; renderRank();
+    if (dirty) pump();
+  }
+}
+function mergeMine(d) { if (!d) return; for (const g of RANKED) store.mine[g.id] = Math.max(store.mine[g.id] || 0, d[g.id] || 0); }
+function goLocal() {
+  store.mode = 'local'; store.state = 'ready'; board = loadBoard();
+  afterModeChosen();
+}
+function afterModeChosen() {
+  const p = store.pend; store.pend = [];
+  renderRank(); refreshCardBests();
+  for (const [g, s] of p) recordScore(g, s);
+}
+async function initStore() {
+  let cl = null; try { cl = window.claude; } catch (e) { }
+  if (!cl || typeof cl.use !== 'function') { goLocal(); return; }
+  const within = p => Promise.race([Promise.resolve(p).catch(() => null), sleep(10000).then(() => null)]);
+  const use = name => { try { return within(cl.use(name)); } catch (e) { return Promise.resolve(null); } };
+  const [db, user] = await Promise.all([use('db'), use('user')]);
+  if (!db) { goLocal(); return; }
+  store.db = db; store.mode = 'online'; store.state = 'loading';
+  renderRank();
+  subscribe();
+  let uid = null; try { uid = user ? await within(user.id()) : null; } catch (e) { }
+  store.uid = typeof uid === 'string' && uid ? uid : null;
+  if (!store.uid) { store.canWrite = false; store.blocked = 'noid'; }
+  else if (user) { let can = null; try { can = await within(user.can('data.write')); } catch (e) { } if (can === false) { store.canWrite = false; store.blocked = 'denied'; } }
+  const mineDoc = store.uid && store.docs.find(d => d.id === store.uid); if (mineDoc) mergeMine(mineDoc);
+  afterModeChosen();
+}
+function subscribe() {
+  const timer = setTimeout(() => { if (store.state === 'loading') { store.state = 'timeout'; renderRank(); } }, 10000);
+  try {
+    store.db.collection('scores').onSnapshot(snap => {
+      store.docs = snap.docs.filter(d => d.exists).map(d => sanitizeDoc(d.id, d.data())).filter(Boolean);
+      if (!snap.metadata || !snap.metadata.fromCache) { clearTimeout(timer); store.state = 'ready'; store.haveRemote = true; }
+      const mineDoc = store.uid && store.docs.find(d => d.id === store.uid); if (mineDoc) mergeMine(mineDoc);
+      renderRank(); refreshCardBests();
+    }, err => { clearTimeout(timer); store.state = 'error'; store.writeErr = (err && err.code) || ''; renderRank(); });
+  } catch (e) { clearTimeout(timer); store.state = 'error'; renderRank(); }
+}
+
+// ---------- 랭킹 UI ----------
+const rankTabs = document.getElementById('rankTabs'), rankList = document.getElementById('rankList'),
+  rankNote = document.getElementById('rankNote'), rankMode = document.getElementById('rankMode'), rankBox = document.getElementById('rank');
+let curTab = RANKED[0].id, lastGame = null, flashMe = null;
+const tabBtns = RANKED.map(g => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'tab'; b.setAttribute('role', 'tab'); b.dataset.id = g.id;
+  b.style.setProperty('--c1', g.c1); b.style.setProperty('--c2', g.c2);
+  b.textContent = g.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  b.addEventListener('click', () => setTab(g.id));
+  rankTabs.appendChild(b); return b;
+});
+function setTab(id) {
+  curTab = id;
+  tabBtns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.id === id)));
+  renderRank();
+}
+const MEDALS = ['🥇', '🥈', '🥉'];
+function rowEl(r, pos, k) {
+  const li = document.createElement('li');
+  li.style.setProperty('--k', k);
+  if (pos === 1) li.classList.add('top1');
+  if (r.me) { li.classList.add('me'); if (flashMe === curTab) li.classList.add('flash'); }
+  const ps = document.createElement('span'); ps.className = 'pos';
+  if (pos <= 3) { const m = document.createElement('span'); m.className = 'medal'; m.textContent = MEDALS[pos - 1]; m.title = pos + '위'; ps.appendChild(m); }
+  else ps.textContent = pos;
+  const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.nick; // 신뢰할 수 없는 값: textContent 만
+  const sc = document.createElement('span'); sc.className = 'sc'; sc.textContent = r.score.toLocaleString();
+  const g = GAMES.find(x => x.id === curTab); sc.style.color = g.c1;
+  li.append(ps, nm, sc);
+  return li;
+}
+function renderRank() {
+  rankMode.classList.toggle('local', store.mode !== 'online');
+  rankMode.textContent = store.mode === 'online' ? '● ONLINE' : store.mode === 'local' ? '로컬 기록' : '연결 중…';
+  const rows = allRows(curTab), items = [];
+  rows.slice(0, 20).forEach((r, k) => items.push(rowEl(r, k + 1, k)));
+  const mi = rows.findIndex(r => r.me);
+  if (mi >= 20) { const sep = document.createElement('li'); sep.className = 'empty'; sep.style.padding = '2px'; sep.textContent = '⋯'; items.push(sep, rowEl(rows[mi], mi + 1, 21)); }
+  if (!items.length) {
+    const li = document.createElement('li'); li.className = 'empty';
+    if (store.mode === 'pending' || (store.mode === 'online' && store.state === 'loading')) {
+      const s = document.createElement('span'); s.className = 'spin'; li.append(s, '기록을 불러오는 중…');
+    } else if (store.mode === 'online' && (store.state === 'timeout' || store.state === 'error')) li.textContent = '기록에 연결할 수 없어요.';
+    else li.textContent = '아직 기록이 없어요. 첫 번째 주인공이 되어보세요!';
+    items.push(li);
+  }
+  rankList.replaceChildren(...items);
+  flashMe = null;
+  // 안내 문구
+  const notes = []; let warn = false;
+  if (store.mode === 'local') notes.push('이 기기에만 저장되는 기록이에요.');
+  if (store.mode === 'online') {
+    if (store.state === 'loading' && rows.length) notes.push('최신 기록을 불러오는 중…');
+    if (store.state === 'timeout') { notes.push(rows.length ? '기록 서버에 연결할 수 없어 최신이 아닐 수 있어요.' : '기록 서버에 연결할 수 없어요. 잠시 후 다시 확인해주세요.'); warn = true; }
+    if (store.state === 'error') { notes.push('기록을 불러오지 못했어요.'); warn = true; }
+    if (!store.canWrite) { notes.push('이 화면에서는 점수를 저장할 수 없어요 — 랭킹 보기만 가능합니다.'); warn = true; }
+    else if (store.writeErr) { notes.push('점수 저장에 실패했어요. 다음 기록 때 다시 시도합니다.'); warn = true; }
+  }
+  rankNote.textContent = notes.join(' ');
+  rankNote.classList.toggle('warn', warn);
+}
+function refreshCardBests() {
+  previews.forEach(p => {
+    const g = p.game; if (g.unranked) return;
+    const b = p.el.querySelector('.best b'); if (!b) return;
+    let hi = 0; try { hi = +localStorage.getItem(g.key) || 0; } catch (e) { }
+    b.textContent = Math.floor(Math.max(hi, store.mode === 'pending' ? 0 : myBest(g.id))).toLocaleString();
+  });
+}
+document.getElementById('rankBtn').addEventListener('click', () => {
+  if (lastGame && SCORE_IDS.has(lastGame)) setTab(lastGame);
+  rankBox.scrollIntoView({ block: 'start', behavior: 'smooth' });
+});
+// NEW BEST 토스트
+const toastEl = document.getElementById('toast');
+function showBest(game, score) {
+  const g = GAMES.find(x => x.id === game);
+  const b = document.createElement('b'); b.textContent = 'NEW BEST!';
+  const s = document.createElement('span'); s.textContent = `${g.name} · ${score.toLocaleString()}`;
+  toastEl.replaceChildren(b, s);
+  toastEl.classList.remove('show'); void toastEl.offsetWidth; toastEl.classList.add('show');
+  [0, 90, 180].forEach((d, i) => setTimeout(() => blip(700 + i * 260), d));
+}
+// 테스트 훅: 게임 메시지 처리기와 같은 경로
+window.__arcade = { receive: onGameMessage, launch, close: closeGame, store };
+
+renderNick();
+setTab(curTab);
+refreshCardBests();
+if (!EMBEDDED) initStore();
 
 // ---------- 효과음 ----------
 let AC = null;
@@ -393,14 +807,86 @@ function drawStackPreview(p, dt) {
   if (nx + cs * 3 < w) { cell(nx, by + cs, '#ffd23f', .7); cell(nx + cs, by + cs, '#ffd23f', .7); cell(nx, by + cs * 2, '#ffd23f', .7); cell(nx + cs, by + cs * 2, '#ffd23f', .7);
     cell(nx, by + cs * 4, '#2bd9ff', .5); cell(nx + cs, by + cs * 4, '#2bd9ff', .5); cell(nx + cs * 2, by + cs * 4, '#2bd9ff', .5); cell(nx + cs, by + cs * 3, '#2bd9ff', .5); }
 }
-const DRAW = { sky: drawSkyPreview, brk: drawBreakerPreview, run: drawRunnerPreview, stk: drawStackPreview };
+function sparkle(c, x, y, r, col, a) {
+  c.globalAlpha = a; c.fillStyle = col;
+  c.beginPath(); c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill();
+  c.globalAlpha = 1;
+}
+function drawDressPreview(p, dt) {
+  const c = p.ctx, w = p.w, h = p.h;
+  if (!p.st) p.st = { sp: Array.from({ length: 14 }, () => ({ x: Math.random() * w, y: Math.random() * h, t: Math.random() * 2, s: rand(3, 7) })), parts: [], rings: [], coinT: 0 };
+  const st = p.st;
+  // 파스텔 밤하늘 배경
+  const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#2a1046'); g.addColorStop(1, '#5c2a72'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+  c.globalCompositeOperation = 'lighter'; glowDot(c, w * .5, h * .45, w * .45, '#ff8fd8', .25); c.globalCompositeOperation = 'source-over';
+  // 바닥 선반
+  const fy = h * .9;
+  c.fillStyle = 'rgba(255,190,240,.12)'; c.fillRect(0, fy, w, h - fy);
+  c.strokeStyle = 'rgba(255,190,240,.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, fy + .5); c.lineTo(w, fy + .5); c.stroke();
+  // 행거 봉
+  const ry = h * .16, rx0 = w * .08, rx1 = w * .92;
+  c.lineCap = 'round';
+  c.strokeStyle = '#ffd98a'; c.lineWidth = 4; c.beginPath(); c.moveTo(rx0, ry); c.lineTo(rx1, ry); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(rx0, ry - 1); c.lineTo(rx1, ry - 1); c.stroke();
+  c.fillStyle = '#ffd98a'; c.beginPath(); c.arc(rx0, ry, 4.5, 0, TAU); c.arc(rx1, ry, 4.5, 0, TAU); c.fill();
+  // 드레스 4벌
+  const DR = [['#ff8fd8', '#ffd1f0'], ['#b69cff', '#e4dbff'], ['#7fe8d0', '#d4fff4'], ['#ffb38a', '#ffe3d1']];
+  const n = DR.length, sc = Math.min(1.25, h / 150);
+  for (let i = 0; i < n; i++) {
+    const hx = rx0 + (rx1 - rx0) * (i + .5) / n, ang = Math.sin(T * 1.7 + i * 1.3) * .13;
+    const [col, lt] = DR[i];
+    c.save(); c.translate(hx, ry); c.rotate(ang); c.scale(sc, sc);
+    // 옷걸이
+    c.strokeStyle = '#e9e2ff'; c.lineWidth = 1.6;
+    c.beginPath(); c.arc(0, -3, 3.5, Math.PI, TAU * .9); c.moveTo(0, 0); c.lineTo(-15, 9); c.lineTo(15, 9); c.closePath(); c.stroke();
+    // 끈 + 상의
+    c.fillStyle = col;
+    c.beginPath(); c.moveTo(-9, 9); c.lineTo(9, 9); c.lineTo(7, 28); c.lineTo(-7, 28); c.closePath(); c.fill();
+    c.fillStyle = lt; c.fillRect(-7, 26, 14, 3); // 허리 리본띠
+    // 치마 (살랑이는 스캘럽)
+    const flare = 22 + Math.sin(T * 3 + i) * 1.5, sh = 34;
+    const sg = c.createLinearGradient(0, 28, 0, 28 + sh); sg.addColorStop(0, col); sg.addColorStop(1, lt);
+    c.fillStyle = sg;
+    c.beginPath(); c.moveTo(-7, 29); c.lineTo(7, 29); c.lineTo(flare, 28 + sh);
+    for (let k = 4; k >= 0; k--) { const x = -flare + k * flare * 2 / 5; c.quadraticCurveTo(x + flare / 5, 28 + sh + 6 + Math.sin(T * 4 + k + i) * 1.2, x, 28 + sh); }
+    c.closePath(); c.fill();
+    // 반짝 하이라이트 / 리본
+    c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.ellipse(-4, 14, 2, 4, -.3, 0, TAU); c.fill();
+    c.fillStyle = lt; c.beginPath(); c.moveTo(0, 27.5); c.lineTo(-5, 24); c.lineTo(-5, 31); c.closePath(); c.moveTo(0, 27.5); c.lineTo(5, 24); c.lineTo(5, 31); c.closePath(); c.fill();
+    c.restore();
+  }
+  // 반짝이
+  c.globalCompositeOperation = 'lighter';
+  for (const s of st.sp) {
+    s.t += dt; if (s.t > 2) { s.t = 0; s.x = Math.random() * w; s.y = Math.random() * h * .85; }
+    const a = Math.sin(s.t / 2 * Math.PI);
+    sparkle(c, s.x, s.y, s.s * a, '#fff4fd', a * .9);
+    glowDot(c, s.x, s.y, s.s * 2.2, '#ff8fd8', a * .4);
+  }
+  c.globalCompositeOperation = 'source-over';
+  // 통통 튀는 코인
+  const cx = w * .86, bounce = Math.abs(Math.sin(T * 3.2)), cy = fy - 10 - bounce * h * .22;
+  const sx = Math.cos(T * 6), squash = bounce < .08 ? 1.25 : 1;
+  if (bounce < .04 && (st.coinT -= dt) <= 0) { st.coinT = .3; for (let i = 0; i < 5; i++) st.parts.push({ x: cx, y: fy, vx: rand(-70, 70), vy: rand(-90, -20), life: .35, col: '#ffe27a' }); }
+  c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(cx, fy + 2, 9 * (1 - bounce * .5), 2.5, 0, 0, TAU); c.fill();
+  c.globalCompositeOperation = 'lighter'; glowDot(c, cx, cy, 20, '#ffd23f', .55); c.globalCompositeOperation = 'source-over';
+  c.save(); c.translate(cx, cy); c.scale(Math.max(.12, Math.abs(sx)) * squash, 1 / squash);
+  c.fillStyle = '#e8a91e'; c.beginPath(); c.arc(0, 0, 9, 0, TAU); c.fill();
+  c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(0, 0, 7.2, 0, TAU); c.fill();
+  c.fillStyle = sx > 0 ? '#fff3b8' : '#e8a91e'; c.font = '900 9px "Segoe UI",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('♥', 0, .5);
+  c.restore();
+  stepParts(c, st, dt);
+}
+const DRAW = { sky: drawSkyPreview, brk: drawBreakerPreview, run: drawRunnerPreview, stk: drawStackPreview, dress: drawDressPreview };
 
 let last = performance.now();
 function frame(now) {
+  if (EMBEDDED) return;
+  requestAnimationFrame(frame);
   const dt = Math.min(.05, (now - last) / 1000); last = now; T += dt;
+  if (gameOpen) return; // 게임 중에는 런처 렌더링 정지
   drawBG(dt);
   for (const p of previews) { sizePreview(p); if (p.w > 1) DRAW[p.game.id](p, dt); }
-  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 </script>
